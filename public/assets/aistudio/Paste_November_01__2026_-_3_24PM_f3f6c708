@@ -1,0 +1,601 @@
+LEARNOVA: Offline-First AI Learning Assistant for Android
+1. Your Role
+Act as a principal Android engineer, Kotlin architect, mobile AI inference engineer, RAG specialist, security engineer, UX engineer, and QA lead.
+Design and implement Learnova, a production-oriented, offline-first Android AI learning application.
+Your responsibilities include:
+•	Designing a maintainable Android architecture.
+•	Integrating online AI providers and locally executed models.
+•	Integrating Needle3 from Hugging Face as the default lightweight local model.
+•	Implementing document-based Retrieval-Augmented Generation (RAG).
+•	Optimizing performance for entry-level and mid-range Android devices.
+•	Delivering a working, buildable application rather than a static mockup.
+•	Clearly documenting incomplete features, platform limitations, and integration risks.
+Do not claim a feature works until it has been implemented and tested.
+________________________________________
+2. Product Identity
+Application name: Learnova
+Tagline: Learn Anything. Anywhere.
+Product vision: An AI learning companion that works online and offline, helps students understand academic material, answers questions from their own documents, generates practice quizzes, and protects users' privacy by keeping supported AI processing on their devices.
+The first deployment should support students at Dilla University (DU), Ethiopia, while the architecture remains reusable by other universities and independent users.
+Use the following proposed visual palette:
+•	Primary green: #1B7A3E
+•	Light green: #E8F5E9
+•	Red: #E41F1F
+•	Yellow: #FFD700
+•	Light gray: #F2F2F2
+•	Dark text: #333333
+Use a clean academic interface, accessible contrast, readable typography, and responsive layouts.
+Do not invent an official university logo. Use a placeholder until an authorized logo asset is supplied.
+________________________________________
+3. Non-Negotiable Product Requirements
+Learnova must support:
+1.	Online AI chat using configurable cloud providers.
+2.	Offline AI inference using compatible local models.
+3.	Needle3 as the default lightweight local model.
+4.	A model catalog where users can discover and download additional compatible models.
+5.	PDF, DOCX, PPTX, TXT, and Markdown document imports.
+6.	Local document processing and retrieval.
+7.	RAG-based answers with verifiable document citations.
+8.	Academic workspaces with isolated documents and conversations.
+9.	A study-first tutoring experience.
+10.	Quiz generation, practice attempts, and explanations.
+11.	Real DOCX and PDF export.
+12.	A clear separation between local-only and cloud processing.
+13.	Performance-aware behavior on low-memory Android devices.
+14.	Reliable recovery from failed downloads, model initialization errors, and interrupted operations.
+15.	A modular architecture that allows additional model runtimes and AI providers to be added later.
+Build a functional MVP first. Avoid implementing numerous superficial screens while leaving the core AI workflow incomplete.
+________________________________________
+4. Critical Requirement: Needle3 Integration
+Official model repository
+Use the following Hugging Face repository as the canonical model source:
+https://huggingface.co/Cactus-Compute/needle3
+The official project is also available at:
+https://github.com/cactus-compute/needle
+Model documentation:
+https://www.cactuscompute.com/needle
+Default model behavior
+Needle3 must be the first-party default lightweight local model presented during onboarding and the default local model selection after a successful installation.
+Use the display name:
+Needle3 — Learnova Lightweight AI
+Show the model's actual installed status, download size, supported capabilities, and device compatibility.
+Do not falsely report that Needle3 is installed simply because its catalog entry is visible.
+If the model cannot be loaded on a device, explain the reason and provide compatible alternatives.
+Understand the model's intended capabilities
+Needle3 is a compact model designed particularly for:
+•	Local tool selection and function calling.
+•	Structured data extraction.
+•	Classification-like tasks.
+•	Text embeddings and similarity-based operations.
+•	Lightweight on-device AI workflows.
+Do not assume that it offers the same general conversation, extended reasoning, or academic explanation quality as a larger language model.
+Before integration, evaluate its suitability for:
+•	Short educational questions.
+•	Simple explanations.
+•	Structured extraction from imported text.
+•	Local retrieval support.
+•	Quiz question generation.
+•	Application tool routing.
+•	Structured outputs and confidence-based decisions.
+Run representative educational tests. Record failures and unsupported tasks.
+For complex tutoring, long-form explanations, or tasks that exceed Needle3's capabilities, let the user choose another compatible model or an online provider.
+Do not silently send a user's question or document to a cloud provider when the local model fails.
+Do not assume runtime compatibility
+Needle3 uses its own .cact model format and associated inference engine.
+Do not attempt to load needle3.cact directly with a generic GGUF/llama.cpp runtime unless the model publisher explicitly provides a supported conversion and documents that workflow.
+Investigate the publisher's actual Android integration path, native libraries, headers, model-loading API, supported ABIs, and licensing requirements.
+The Hugging Face repository includes Android-related engine artifacts. Determine whether the current artifacts provide everything needed for a reliable Android application integration.
+Specifically:
+1.	Inspect the official model repository and current documentation.
+2.	Identify the appropriate Android engine and model files.
+3.	Determine whether the documented native C API can be integrated into Kotlin through JNI or an appropriate native bridge.
+4.	Confirm supported Android ABIs, minimum OS requirements, and native library dependencies.
+5.	Verify how model loading, inference, streaming, cancellation, embeddings, tool calls, and cleanup work.
+6.	Build a minimal native integration proof of concept.
+7.	Test it on an actual Android device or emulator that satisfies the documented requirements.
+8.	Document any missing Android integration steps.
+If the available publisher artifacts do not provide a verified Android integration path, implement a clean runtime interface and a working integration investigation branch. Do not fabricate API functions, invent unsupported build commands, or claim successful inference.
+In that situation, clearly report the blocker and continue implementing the rest of Learnova using a mockable runtime interface and, where practical, another verified local model runtime.
+Model selection and download
+Implement a dedicated model manager.
+For Needle3, it must:
+•	Retrieve model metadata from the official repository.
+•	Pin a known model revision for reproducible downloads.
+•	Resolve the correct model artifact and Android engine for the device.
+•	Display download size before starting.
+•	Check available storage.
+•	Download with progress reporting.
+•	Support cancellation and safe retry.
+•	Resume downloads when supported by the source and transfer mechanism.
+•	Verify artifact integrity using trusted published checksums where available.
+•	Verify licenses and redistribution permissions.
+•	Store the model and runtime files in appropriate application storage.
+•	Validate the installation before making the model selectable.
+•	Support deleting model files and recovering storage.
+•	Provide understandable errors when files are missing or incompatible.
+Do not download the entire repository when only a subset of files is required.
+Do not hard-code fragile download URLs when repository metadata or a documented download mechanism can be used.
+Do not treat the model's small file size as proof that its runtime memory requirements are equally small. Measure actual peak memory use, initialization time, and inference performance.
+Additional models
+Support a catalog of other compatible models from Hugging Face or other legitimate sources.
+Each model entry must declare:
+•	Model name and publisher.
+•	Repository and pinned revision.
+•	Model format.
+•	Supported runtime.
+•	Required runtime files.
+•	License.
+•	Download size.
+•	Estimated memory requirements, when known.
+•	Minimum supported device characteristics, when verified.
+•	Supported tasks.
+•	Known limitations.
+•	Whether it works fully offline.
+•	Whether it supports embeddings, structured outputs, tool calls, or multimodal input.
+Do not present a model as Android-compatible simply because it is hosted on Hugging Face.
+Never execute downloaded model files or native libraries without validating the source, integrity, and installation procedure.
+________________________________________
+5. Android Technology Stack
+Prefer a native Android application.
+Use:
+•	Kotlin.
+•	Jetpack Compose.
+•	Material 3.
+•	MVVM and unidirectional data flow.
+•	Android ViewModel.
+•	Kotlin Coroutines and Flow.
+•	Navigation Compose.
+•	Hilt or another consistently implemented dependency injection approach.
+•	Room for local structured persistence.
+•	DataStore for preferences.
+•	WorkManager for appropriate background operations.
+•	Android Storage Access Framework for document selection.
+•	OkHttp or Ktor for network requests.
+•	Android Keystore-backed protection for sensitive configuration.
+•	Native C/C++ integration where a verified runtime requires it.
+Keep inference, file extraction, embedding, indexing, and export work off the main thread.
+Do not use a WebView as a substitute for the core application.
+Suggested module structure
+•	app
+•	core:common
+•	core:database
+•	core:network
+•	core:security
+•	core:designsystem
+•	domain
+•	data
+•	feature:home
+•	feature:chat
+•	feature:workspaces
+•	feature:documents
+•	feature:study
+•	feature:quizzes
+•	feature:models
+•	feature:providers
+•	feature:settings
+•	feature:export
+•	ai:providers
+•	ai:inference
+•	ai:needle3
+•	ai:rag
+•	documents:processing
+•	native:needle3
+Adapt this structure if a simpler structure is more appropriate for the first MVP, but preserve clear module boundaries.
+________________________________________
+6. AI Provider Architecture
+Create a provider-independent interface for AI operations.
+Possible abstractions:
+•	AIProvider
+•	ProviderRegistry
+•	ModelRegistry
+•	ModelRuntime
+•	ModelManager
+•	InferenceRequest
+•	InferenceResult
+•	StreamingInferenceResult
+•	EmbeddingProvider
+•	ToolCallingProvider
+Support:
+•	Gemini.
+•	xAI Grok.
+•	OpenRouter.
+•	OpenAI-compatible endpoints.
+•	User-configured local endpoints.
+•	On-device model runtimes.
+Verify the current API documentation and supported model identifiers before implementing each provider.
+Do not invent endpoints or assume all providers support the same request format, streaming behavior, tool calling, image input, or structured output.
+At least one cloud provider must be implemented and tested end to end for the MVP. Other providers may be added incrementally.
+Provider configuration
+Allow users to:
+•	Add and edit provider configurations.
+•	Enter an API key.
+•	Select an available model.
+•	Test the connection.
+•	See clear errors.
+•	Delete the configuration.
+•	See the selected provider and model before sending a request.
+Protect sensitive values using appropriate Android security facilities. Never log API keys.
+Explain that keys embedded in a distributed mobile application cannot be guaranteed completely secret. For institutional deployments, provide an optional secure backend proxy design.
+Respect provider terms, rate limits, pricing, and free-tier restrictions.
+Operating modes
+Provide three explicit modes:
+Local Only
+•	Use only local models and local processing.
+•	Never send user content to a cloud AI provider.
+•	Disable unavailable online tools.
+•	Remain functional offline wherever supported.
+Cloud AI
+•	Use the user's explicitly selected online provider.
+•	Explain that requests leave the device.
+•	Show connection and quota errors.
+Smart Routing
+•	Choose among available local and cloud capabilities according to explicit user settings.
+•	Show which model will process the request.
+•	Never silently switch to cloud processing when a local operation fails.
+•	Respect a user setting that forbids cloud processing.
+The current processing mode must remain visible in the chat interface.
+________________________________________
+7. Local Model Runtime
+Create a common interface so the UI does not depend directly on Needle3 or any specific model implementation.
+Example conceptual operations:
+•	Check compatibility.
+•	Check installation status.
+•	Download required assets.
+•	Load model.
+•	Initialize session.
+•	Generate a response.
+•	Stream supported output.
+•	Cancel inference.
+•	Generate embeddings, if supported.
+•	Execute structured inference or tool selection, if supported.
+•	Release model resources.
+•	Report runtime errors and measured resource usage.
+The actual interface must reflect the capabilities of the chosen runtime rather than assuming every runtime supports every operation.
+For Needle3, use the verified publisher-supported engine and model format.
+For additional models, allow other runtime adapters, including llama.cpp where the model format and Android integration are genuinely supported.
+Never block the UI while loading a model or performing inference.
+Avoid loading multiple large models simultaneously on low-memory devices unless a measured resource budget demonstrates that this is safe.
+Provide graceful handling for:
+•	Insufficient memory.
+•	Unsupported ABI.
+•	Missing model files.
+•	Invalid model format.
+•	Initialization failures.
+•	Device thermal pressure.
+•	Low storage.
+•	Process interruption.
+________________________________________
+8. Device-Aware Model Management
+Learnova must support a range of Android devices, including entry-level phones.
+During compatibility evaluation, consider:
+•	Available RAM.
+•	Android version.
+•	CPU architecture and supported instructions.
+•	Available storage.
+•	Runtime compatibility.
+•	Model-specific memory requirements.
+•	Context length.
+•	Expected inference latency.
+•	Battery and thermal considerations.
+Do not assume that every device has a GPU suitable for AI inference.
+Use CPU inference when appropriate. Use hardware acceleration only when the runtime and device support it.
+Create a compatibility assessment that distinguishes:
+•	Supported.
+•	Supported with limitations.
+•	Not recommended.
+•	Unsupported.
+Provide a lightweight model preset and an option to download a more capable model later.
+Model downloads must be user-initiated unless the user explicitly enables a documented download policy. Never silently download large model files using mobile data.
+________________________________________
+9. Document Import and RAG
+Support:
+•	PDF.
+•	DOCX.
+•	PPTX.
+•	TXT.
+•	Markdown.
+Use Android's document picker and process files locally by default.
+Processing pipeline
+1.	Import the file.
+2.	Validate its type and size.
+3.	Extract text and structural metadata.
+4.	Preserve PDF page numbers, PowerPoint slide numbers, and Word headings where possible.
+5.	Normalize extracted text.
+6.	Split it into coherent chunks.
+7.	Generate embeddings using a verified compatible embedding implementation.
+8.	Store chunks and metadata locally.
+9.	Retrieve relevant passages for a user question.
+10.	Generate an answer using the selected AI mode.
+11.	Display source references.
+12.	Allow the user to inspect the source passage.
+Use a modular retrieval implementation that supports:
+•	Keyword search.
+•	Vector similarity search.
+•	Optional hybrid retrieval.
+•	Metadata filtering.
+•	Workspace isolation.
+Do not assume Needle3 embeddings are interchangeable with embeddings from unrelated models. Test the embedding behavior and similarity quality before relying on it for semantic retrieval.
+If Needle3's embedding functionality is suitable for the retrieval task, integrate it through the verified runtime. Otherwise, use a separate compatible embedding model or a keyword-based fallback.
+Never claim that a document has been semantically indexed if only keyword indexing was performed.
+Citation integrity
+Every document-grounded answer must distinguish retrieved evidence from general model knowledge.
+Citations must refer to actual retrieved passages.
+Use:
+•	PDF page numbers.
+•	PPTX slide numbers.
+•	DOCX headings or paragraph references.
+Do not fabricate source references.
+When relevant evidence cannot be retrieved, tell the user instead of presenting an unsupported answer as document-grounded.
+Offline requirement
+After documents have been imported and indexed, supported retrieval and local-model answering must work without an internet connection.
+Cloud-only operations must be clearly marked.
+________________________________________
+10. Academic Workspaces
+Users must be able to create workspaces for:
+•	Courses.
+•	Research projects.
+•	Assignments.
+•	Personal study.
+•	Exam preparation.
+•	Document collections.
+Each workspace should contain:
+•	Workspace name and description.
+•	Uploaded documents.
+•	Conversations.
+•	Workspace instructions.
+•	Notes.
+•	Saved prompts.
+•	Quizzes and attempts.
+•	Generated exports.
+Every workspace must have isolated retrieval by default. Documents from another workspace must not accidentally appear in its answers.
+Support creating, renaming, archiving, and deleting workspaces.
+________________________________________
+11. Study-First Tutor
+The default experience must emphasize learning rather than simply producing answers.
+Provide a Study Mode with:
+•	Explain a concept simply.
+•	Explain step by step.
+•	Give an example.
+•	Compare concepts.
+•	Identify common misconceptions.
+•	Summarize a document.
+•	Generate practice questions.
+•	Explain a worked solution.
+•	Create revision notes.
+•	Ask Socratic follow-up questions.
+Allow users to adjust the explanation level and language.
+Keep the system prompt appropriate to the selected model's actual capabilities. Do not expect a tiny specialized model to reliably produce advanced tutoring simply because the prompt requests it.
+For tasks beyond the selected model's capability, explain the limitation and let the user choose another model.
+Academic integrity
+If the user explicitly identifies a task as an active examination where AI assistance is prohibited, do not provide direct answers that facilitate cheating. Offer conceptual review or similar practice questions instead.
+Do not claim perfect detection of examinations or cheating from document contents alone.
+________________________________________
+12. Quiz and Practice System
+Allow users to create quizzes from:
+•	Imported documents.
+•	Workspace content.
+•	User-specified topics.
+•	Study notes.
+Support:
+•	Multiple-choice questions.
+•	True/false questions.
+•	Short-answer questions where supported.
+•	Configurable question count and difficulty.
+•	Answer explanations.
+•	Practice attempts.
+•	Scores and review.
+•	Local persistence.
+•	Offline use with compatible local models.
+Validate generated quiz structures before saving them. If the selected model returns malformed output, recover gracefully or request regeneration.
+Do not show a quiz as document-grounded unless its questions were actually generated from or checked against relevant source material.
+________________________________________
+13. Images and Multimodal Inputs
+Provide an architecture that can later support image input.
+For the MVP:
+•	Allow users to select an image where the selected provider or local runtime supports it.
+•	Check the selected model's actual capabilities.
+•	Provide OCR as a separate local processing path where practical.
+•	Clearly communicate when image interpretation requires cloud processing.
+Do not assume Needle3 is a vision model.
+Before sending an image to a cloud provider, follow the active processing mode and privacy settings.
+________________________________________
+14. Internet Search and Tool Calling
+Implement web search and application tools as separate, permission-controlled capabilities.
+Potential tools include:
+•	Search the web.
+•	Search a workspace.
+•	Retrieve document passages.
+•	Create a quiz.
+•	Save a note.
+•	Export a document.
+For Needle3:
+•	Use its verified tool-calling mechanism.
+•	Supply concise, typed tool schemas.
+•	Validate every tool name and argument.
+•	Enforce application permissions.
+•	Require user confirmation for consequential actions.
+•	Never execute arbitrary commands merely because a model requests them.
+A tool call is a proposal, not authorization.
+If a tool is not implemented or unavailable offline, explain that clearly.
+________________________________________
+15. DOCX and PDF Export
+Implement real file generation.
+Users must be able to export:
+•	Study notes.
+•	Summaries.
+•	Conversation responses.
+•	Quiz questions and answer keys.
+•	Revision guides.
+•	Workspace notes.
+DOCX files must open in standard word-processing software. PDF files must be valid and readable.
+Use appropriate Android-compatible libraries and save files through supported storage APIs.
+Do not create fake download buttons or placeholder export files.
+Show export progress, success, failure, and the actual output location.
+________________________________________
+16. Local Data and Privacy
+Use Room for structured data and application-managed storage for document files, indexes, and model assets.
+Suggested entities:
+•	Workspace.
+•	Conversation.
+•	Message.
+•	Document.
+•	DocumentChunk.
+•	ModelConfiguration.
+•	ProviderConfiguration.
+•	SavedPrompt.
+•	Quiz.
+•	QuizQuestion.
+•	QuizAttempt.
+•	GeneratedArtifact.
+•	IndexingJob.
+Protect secrets and avoid logging sensitive user content.
+Provide controls to:
+•	Delete a document and its associated index.
+•	Delete a conversation.
+•	Delete a workspace and its associated data.
+•	Delete downloaded models.
+•	Remove provider credentials.
+•	Clear appropriate local caches.
+•	Export user-created content.
+Clearly explain which operations require internet access.
+Default to local document processing and local embeddings when the selected implementation supports them.
+________________________________________
+17. UI Screens
+Implement:
+1.	Onboarding.
+2.	Home dashboard.
+3.	Chat and conversation history.
+4.	Model selector.
+5.	Model catalog and download manager.
+6.	Model details and compatibility information.
+7.	Provider configuration.
+8.	Workspace list.
+9.	Create workspace.
+10.	Workspace detail.
+11.	Document import and processing status.
+12.	Document viewer with citations.
+13.	Study Mode.
+14.	Quiz creation.
+15.	Quiz attempt.
+16.	Quiz results.
+17.	Saved prompts.
+18.	Export center.
+19.	Settings.
+20.	Privacy and data management.
+The model manager must clearly identify Needle3 as the default lightweight local model and show its real download and installation status.
+________________________________________
+18. Testing Requirements
+Implement meaningful automated tests and manual verification instructions.
+Unit tests
+•	Model compatibility decisions.
+•	Provider configuration validation.
+•	RAG chunking and retrieval.
+•	Workspace isolation.
+•	Citation mapping.
+•	Download state transitions.
+•	Quiz validation.
+•	Export generation.
+Integration tests
+•	Successful local model initialization.
+•	Needle3 inference through the supported native engine.
+•	Model download and integrity validation.
+•	Document import and indexing.
+•	Offline retrieval.
+•	Provider API calls.
+•	Database persistence.
+•	Export file generation.
+UI tests
+•	Onboarding.
+•	Selecting Local Only mode.
+•	Downloading a model.
+•	Importing a PDF.
+•	Asking a document-grounded question.
+•	Opening a citation.
+•	Generating a quiz.
+•	Exporting a file.
+•	Handling a failed network request.
+Physical-device testing
+Measure:
+•	Model download size.
+•	Model initialization time.
+•	Peak memory usage.
+•	Inference latency.
+•	Battery and thermal behavior.
+•	App stability under memory pressure.
+Do not invent benchmark values. Record measured results and the devices used.
+________________________________________
+19. Required MVP Acceptance Criteria
+The MVP is not complete until the following core paths work:
+1.	The app builds successfully.
+2.	A user can open the app and create a workspace.
+3.	A user can configure at least one working cloud provider.
+4.	A user can download and install a verified compatible local model.
+5.	Needle3 is the default lightweight model when its Android integration is verified and available.
+6.	The app can execute a real local inference with the selected model.
+7.	A user can import a PDF and extract its text.
+8.	The app can index document passages locally.
+9.	A user can ask a question and receive an answer based on retrieved passages.
+10.	The answer shows valid source references.
+11.	The user can retrieve indexed passages while offline.
+12.	The app does not silently send local-only requests to the cloud.
+13.	A user can generate and attempt a quiz.
+14.	A user can export an actual DOCX or PDF.
+15.	Failures produce understandable messages and do not crash the app.
+16.	The app provides a reproducible build and setup guide.
+If Needle3 integration is blocked by a genuine runtime limitation, report the exact blocker, evidence, and next steps. Do not claim that acceptance criterion 5 or 6 has passed.
+________________________________________
+20. Implementation Workflow
+Work in small, testable phases.
+Phase 1: Architecture and feasibility
+Return:
+•	Architecture overview.
+•	Module structure.
+•	Dependency list.
+•	Database schema.
+•	Provider interface design.
+•	Model runtime interface design.
+•	Needle3 Android integration feasibility assessment.
+•	Proposed testing strategy.
+•	MVP task breakdown.
+Investigate Needle3 before committing to a runtime implementation.
+Phase 2: Android foundation
+Implement:
+•	Project setup.
+•	Compose theme.
+•	Navigation.
+•	Onboarding.
+•	Home screen.
+•	Settings.
+•	Local database.
+•	Workspace creation.
+Phase 3: Working cloud AI
+Implement one real cloud provider, secure configuration, chat history, streaming where supported, cancellation, and error handling.
+Phase 4: Document processing and RAG
+Implement document import, extraction, chunking, local indexing, retrieval, citations, and workspace isolation.
+Phase 5: Needle3 and local AI
+Implement the verified native integration, model manager, download flow, inference, resource cleanup, and offline behavior.
+Phase 6: Study tools and export
+Implement Study Mode, quiz generation, saved prompts, DOCX export, and PDF export.
+Phase 7: Hardening
+Add tests, improve accessibility, evaluate performance, verify offline operation, and document remaining limitations.
+________________________________________
+21. How You Must Respond and Work
+Begin by inspecting the current project files, if any, and the official Needle3 documentation.
+Do not immediately generate a huge collection of disconnected files.
+First provide:
+1.	A concise architecture.
+2.	A dependency plan.
+3.	A concrete Needle3 Android integration assessment.
+4.	A prioritized implementation plan.
+5.	Any essential risks or blockers.
+Then implement Phase 1 and continue through the phases in manageable increments.
+Provide complete source files rather than disconnected fragments when implementing a feature.
+Use real dependencies and documented APIs. If a dependency or API is uncertain, verify it before use.
+Clearly distinguish:
+•	Implemented and tested.
+•	Implemented but not tested.
+•	Planned.
+•	Blocked by a verified limitation.
+Never substitute mock inference for real AI inference without explicitly labeling it.
+The central goal is a genuinely useful Android learning app: Needle3 as the lightweight default local model, optional stronger models for demanding tasks, cloud AI when explicitly selected, and reliable document-grounded learning that works offline wherever supported.
+

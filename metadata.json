@@ -1,0 +1,6 @@
+{
+  "name": "Learnova",
+  "description": "Offline-first AI learning assistant for university study, lecture review, and grounded RAG.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
